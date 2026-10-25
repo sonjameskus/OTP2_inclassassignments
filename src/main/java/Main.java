@@ -8,7 +8,8 @@ public class Main {
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        Locale locale = Locale.getDefault();
+        sc.useLocale(Locale.US);
+        Locale locale = Locale.US;
         System.out.println("Select language 1. English 2. suomeksi 3. svenska 4. 日本語");
         int lang = sc.nextInt();
         switch (lang) {
