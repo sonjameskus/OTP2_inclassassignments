@@ -10,7 +10,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         sc.useLocale(Locale.US);
         Locale locale = Locale.US;
-        System.out.println("Select language 1. English 2. suomeksi 3. svenska 4. 日本語");
+        System.out.println("Select language 1. English 2. suomeksi 3. svenska 4. 日本語 5. عربي");
         int lang = sc.nextInt();
         switch (lang) {
             case 1:
@@ -25,8 +25,11 @@ public class Main {
             case 4:
                 locale = new Locale("ja", "JP");
                 break;
+            case 5:
+                locale = new Locale("ar", "EG");
+                break;
             default:
-                System.out.println("Invalid choice.");
+                System.out.println("Invalid choice. Default is English.");
                 break;
         }
 
