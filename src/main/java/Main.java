@@ -18,7 +18,7 @@ public class Main extends Application {
     public void start(Stage stage) throws IOException {
 
         FXMLLoader fxmlLoader = new FXMLLoader(
-                getClass().getResource("/tempUi.fxml")
+                getClass().getResource("/tempUI.fxml")
         );
 
         Parent root = fxmlLoader.load();

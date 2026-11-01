@@ -1,0 +1,47 @@
+---
+# 1. Database Credentials Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mariadb-secret
+type: Opaque
+stringData:
+  mariadb-user-password: "password"
+  mariadb-database: "temperature_db"
+
+---
+# 2. JavaFX App Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: javafx-temperature-converter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: javafx-temperature-converter
+  template:
+    metadata:
+      labels:
+        app: javafx-temperature-converter
+    spec:
+      containers:
+        - name: javafx-app
+          image: sinyalohis/otp2_inclass:v1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              value: "host.minikube.internal"
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              value: "temperature_db"
+            - name: DB_USER
+              value: "temperature"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: mariadb-user-password
+            - name: DISPLAY
+              value: "host.minikube.internal:0.0"
