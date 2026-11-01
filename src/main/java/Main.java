@@ -1,53 +1,34 @@
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.Scanner;
 
-public class Main {
-    private static final TemperatureConverter converter =
-            new TemperatureConverter();
+import javafx.application.Application;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import javafx.fxml.FXMLLoader;
+
+import java.io.IOException;
+
+public class Main extends Application {
+
+    @Override
+    public void init() {
+        System.out.println("INIT CALLED");
+    }
+
+    @Override
+    public void start(Stage stage) throws IOException {
+
+        FXMLLoader fxmlLoader = new FXMLLoader(
+                getClass().getResource("/tempUi.fxml")
+        );
+
+        Parent root = fxmlLoader.load();
+
+        stage.setTitle("Temperature Converter");
+        stage.setScene(new Scene(root));
+        stage.show();
+    }
 
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        sc.useLocale(Locale.US);
-        Locale locale = Locale.US;
-        System.out.println("Select language 1. English 2. suomeksi 3. svenska 4. 日本語 5. عربي");
-        int lang = sc.nextInt();
-        switch (lang) {
-            case 1:
-                locale = new Locale("en", "US");
-                break;
-            case 2:
-                locale = new Locale("fi", "FI");
-                break;
-            case 3:
-                locale = new Locale("sv", "SE");
-                break;
-            case 4:
-                locale = new Locale("ja", "JP");
-                break;
-            case 5:
-                locale = new Locale("ar", "EG");
-                break;
-            default:
-                System.out.println("Invalid choice. Default is English.");
-                break;
-        }
-
-        ResourceBundle rs = ResourceBundle.getBundle("MessagesBundle", locale);
-        System.out.println(rs.getString("lang_chosen"));
-        System.out.println(rs.getString("question"));
-        int convert = sc.nextInt();
-        if (convert == 1) {
-            System.out.println(rs.getString("celsius"));
-            double celsius = sc.nextDouble();
-            double fahrenheit = converter.celsiusToFahrenheit(celsius);
-            System.out.println(celsius + " " + (rs.getString("ctof") + " " + fahrenheit));
-        }  else if (convert == 2) {
-            System.out.println(rs.getString("fahrenheit"));
-            double fahrenheit = sc.nextDouble();
-            double celsius = converter.fahrenheitToCelsius(fahrenheit);
-            System.out.println(fahrenheit + " " + (rs.getString("ftoc") + " " + celsius));
-        } else {
-            System.out.println(rs.getString("error"));
-        }
-}}
+        launch(args);
+    }
+}

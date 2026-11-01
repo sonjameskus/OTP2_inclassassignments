@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="437.0" prefWidth="352.0" style="-fx-background-color: linear-gradient(            to bottom right,            #B6CF7C,            #F29AAB    );;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MainController">
+   <children>
+      <HBox layoutX="24.0" layoutY="30.0" prefHeight="74.0" prefWidth="302.0" style="-fx-background-color: linear-gradient(            to bottom right,           #d7ebc0,            #e3c9b7    ); -fx-padding: 10px;;">
+         <children>
+            <ComboBox fx:id="languageComboBox" prefWidth="300.0" promptText="Select language" style="-fx-background-color: linear-gradient(            to bottom right,           #d7ebc0,            #e3c9b7    ); -fx-border-color: #000;; -fx-border-style: dotted;" />
+         </children></HBox>
+      <VBox layoutX="24.0" layoutY="104.0" prefHeight="305.0" prefWidth="302.0" style="-fx-background-color: linear-gradient(            to bottom right,           #d7ebc0,            #ecaeaf    ); -fx-padding: 10px; -fx-spacing: 10px;">
+         <children>
+            <Label fx:id="name" text="Temperature Converter" />
+            <ComboBox fx:id="unitComboBox" prefWidth="300.0" promptText="From:" style="-fx-background-color: linear-gradient(            to bottom right,           #d7ebc0,            #e3c9b7    ); -fx-border-color: #000;; -fx-border-style: dotted;" />
+            <TextField fx:id="temperatureField" promptText="Enter the value" style="-fx-background-color: linear-gradient(            to bottom right,           #d7ebc0,            #e3c9b7    ); -fx-border-color: #000;; -fx-border-style: dotted;" />
+            <ComboBox fx:id="toUnitComboBox" prefWidth="300.0" promptText="To:" style="-fx-background-color: linear-gradient(            to bottom right,           #d7ebc0,            #e3c9b7    ); -fx-border-color: #000;; -fx-border-style: dotted;" />
+            <Button fx:id="submit" mnemonicParsing="false" style="-fx-background-color: linear-gradient(            to bottom right,           #d7ebc0,            #e3c9b7    ); -fx-border-color: #000;; -fx-border-style: dotted;" text="Convert" onAction="#handleConvert" />
+            <Label fx:id="conversionResult" text="Conversion:" />
+            <Label fx:id="db_text" text="Saved to database." />
+         </children></VBox>
+   </children>
+</AnchorPane>
