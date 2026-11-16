@@ -12,6 +12,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+import org.mockito.MockedStatic;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -68,7 +75,6 @@ class MainControllerTest {
         return field.get(controller);
     }
 
-    // ORIGINAL 14 TESTS
 
     @Test
     void testCelsiusToFahrenheit() throws Exception {
@@ -232,7 +238,6 @@ class MainControllerTest {
         );
     }
 
-    // 5 ADDITIONAL TESTS
 
     @Test
     void testGetUnitValueCelsius() throws Exception {
@@ -278,7 +283,251 @@ class MainControllerTest {
                     callPrivateMethod("getUnitValue",
                             new Class[]{String.class}, "Unknown");
                 }
+
+
         );
+    }
+
+    @Test
+    void testUpdateUnitNames() throws Exception {
+        runOnFxThread(() -> {
+            prepareController(mock(TempRecordDAO.class));
+
+            try (MockedStatic<UnitDAO> mocked = mockStatic(UnitDAO.class)) {
+                mocked.when(() -> UnitDAO.translate("en"))
+                        .thenReturn(translations());
+
+                callPrivateMethod("updateUnitNames",
+                        new Class[]{String.class, String.class, String.class},
+                        "en", "Celsius", "Fahrenheit");
+
+                ComboBox<String> from =
+                        (ComboBox<String>) getField("unitComboBox");
+
+                ComboBox<String> to =
+                        (ComboBox<String>) getField("toUnitComboBox");
+
+                assertEquals(3, from.getItems().size());
+                assertEquals(3, to.getItems().size());
+                assertEquals("Celsius", from.getValue());
+                assertEquals("Fahrenheit", to.getValue());
+            }
+            return null;
+        });
+    }
+
+    @Test
+    void testLoadLanguage() throws Exception {
+        runOnFxThread(() -> {
+            prepareController(mock(TempRecordDAO.class));
+
+            try (MockedStatic<UnitDAO> mocked = mockStatic(UnitDAO.class)) {
+                mocked.when(() -> UnitDAO.translate("en"))
+                        .thenReturn(translations());
+
+                callPrivateMethod("loadLanguage",
+                        new Class[]{String.class, String.class},
+                        "en", "US");
+
+                assertEquals("en", getField("currentLanguage"));
+
+                ComboBox<String> from =
+                        (ComboBox<String>) getField("unitComboBox");
+
+                assertNotNull(from.getValue());
+                assertEquals(3, from.getItems().size());
+            }
+            return null;
+        });
+    }
+
+    @Test
+    void testInitialize() throws Exception {
+        runOnFxThread(() -> {
+            prepareController(mock(TempRecordDAO.class));
+
+            try (MockedStatic<UnitDAO> mocked = mockStatic(UnitDAO.class)) {
+                mocked.when(() -> UnitDAO.translate("en"))
+                        .thenReturn(translations());
+
+                callPrivateMethod("initialize", new Class[]{});
+
+                ComboBox<String> languages =
+                        (ComboBox<String>) getField("languageComboBox");
+
+                assertEquals(5, languages.getItems().size());
+                assertEquals("English", languages.getValue());
+
+                ComboBox<String> units =
+                        (ComboBox<String>) getField("unitComboBox");
+
+                assertEquals(3, units.getItems().size());
+            }
+            return null;
+        });
+    }
+
+    @Test
+    void testHandleConvertSuccessfulConversion() throws Exception {
+        runOnFxThread(() -> {
+            TempRecordDAO dao = mock(TempRecordDAO.class);
+            when(dao.save(any(TempRecord.class))).thenReturn(true);
+            when(dao.getLastFive()).thenReturn(List.of());
+
+            prepareController(dao);
+
+            Map<String, String> display = new HashMap<>();
+            display.put("Celsius", "Celsius");
+            display.put("Fahrenheit", "Fahrenheit");
+            display.put("Kelvin", "Kelvin");
+
+            setField("displayToUnit", display);
+            setField("unitToDisplay", display);
+
+            ((TextField) getField("temperatureField")).setText("100");
+
+            ((ComboBox<String>) getField("unitComboBox"))
+                    .setValue("Celsius");
+
+            ((ComboBox<String>) getField("toUnitComboBox"))
+                    .setValue("Fahrenheit");
+
+            callPrivateMethod("handleConvert", new Class[]{});
+
+            Label result = (Label) getField("conversionResult");
+
+            assertTrue(result.getText().contains("212.00"));
+            verify(dao).save(any(TempRecord.class));
+            verify(dao).getLastFive();
+
+            return null;
+        });
+    }
+
+    @Test
+    void testHandleConvertInvalidInput() throws Exception {
+        runOnFxThread(() -> {
+            TempRecordDAO dao = mock(TempRecordDAO.class);
+            prepareController(dao);
+
+            ((TextField) getField("temperatureField")).setText("abc");
+
+            callPrivateMethod("handleConvert", new Class[]{});
+
+            Label result = (Label) getField("conversionResult");
+
+            assertFalse(result.getText().isEmpty());
+            verify(dao, never()).save(any(TempRecord.class));
+
+            return null;
+        });
+    }
+
+    @Test
+    void testHandleConvertNegativeKelvin() throws Exception {
+        runOnFxThread(() -> {
+            TempRecordDAO dao = mock(TempRecordDAO.class);
+            prepareController(dao);
+
+            Map<String, String> display = new HashMap<>();
+            display.put("Celsius", "Celsius");
+            display.put("Fahrenheit", "Fahrenheit");
+            display.put("Kelvin", "Kelvin");
+
+            setField("displayToUnit", display);
+            setField("unitToDisplay", display);
+
+            ((TextField) getField("temperatureField")).setText("-10");
+
+            ((ComboBox<String>) getField("unitComboBox"))
+                    .setValue("Kelvin");
+
+            ((ComboBox<String>) getField("toUnitComboBox"))
+                    .setValue("Celsius");
+
+            callPrivateMethod("handleConvert", new Class[]{});
+
+            Label result = (Label) getField("conversionResult");
+
+            assertFalse(result.getText().isEmpty());
+            verify(dao, never()).save(any(TempRecord.class));
+
+            return null;
+        });
+    }
+
+    @Test
+    void testHandleConvertDatabaseSaveFails() throws Exception {
+        runOnFxThread(() -> {
+            TempRecordDAO dao = mock(TempRecordDAO.class);
+            when(dao.save(any(TempRecord.class))).thenReturn(false);
+
+            prepareController(dao);
+
+            Map<String, String> display = new HashMap<>();
+            display.put("Celsius", "Celsius");
+            display.put("Fahrenheit", "Fahrenheit");
+            display.put("Kelvin", "Kelvin");
+
+            setField("displayToUnit", display);
+            setField("unitToDisplay", display);
+
+            ((TextField) getField("temperatureField")).setText("100");
+
+            ((ComboBox<String>) getField("unitComboBox"))
+                    .setValue("Celsius");
+
+            ((ComboBox<String>) getField("toUnitComboBox"))
+                    .setValue("Fahrenheit");
+
+            callPrivateMethod("handleConvert", new Class[]{});
+
+            Label message = (Label) getField("db_text");
+
+            assertFalse(message.getText().isEmpty());
+            verify(dao).save(any(TempRecord.class));
+            verify(dao, never()).getLastFive();
+
+            return null;
+        });
+    }
+
+    @Test
+    void testUpdateHistory() throws Exception {
+        runOnFxThread(() -> {
+            TempRecordDAO dao = mock(TempRecordDAO.class);
+
+            TempRecord record = new TempRecord(
+                    100.0,
+                    37.78,
+                    2,
+                    1,
+                    "en",
+                    new Timestamp(System.currentTimeMillis())
+            );
+
+            when(dao.getLastFive()).thenReturn(List.of(record));
+
+            prepareController(dao);
+
+            Map<String, String> display = new HashMap<>();
+            display.put("Celsius", "Celsius");
+            display.put("Fahrenheit", "Fahrenheit");
+            display.put("Kelvin", "Kelvin");
+
+            setField("unitToDisplay", display);
+
+            callPrivateMethod("updateHistory", new Class[]{});
+
+            ListView<String> history =
+                    (ListView<String>) getField("historyListView");
+
+            assertEquals(1, history.getItems().size());
+            assertTrue(history.getItems().get(0).contains("Fahrenheit"));
+            assertTrue(history.getItems().get(0).contains("Celsius"));
+
+            return null;
+        });
     }
 
     @Test
@@ -290,6 +539,39 @@ class MainControllerTest {
                     callPrivateMethod("getUnitValue",
                             new Class[]{String.class}, (Object) null);
                 }
+        );
+    }
+
+    private <T> T runOnFxThread(Callable<T> task) throws Exception {
+        FutureTask<T> future = new FutureTask<>(task);
+        Platform.runLater(future);
+        return future.get(10, TimeUnit.SECONDS);
+    }
+
+    private void prepareController(TempRecordDAO dao) throws Exception {
+        setField("languageComboBox", new ComboBox<String>());
+        setField("unitComboBox", new ComboBox<String>());
+        setField("toUnitComboBox", new ComboBox<String>());
+        setField("temperatureField", new TextField());
+        setField("conversionResult", new Label());
+        setField("name", new Label());
+        setField("db_text", new Label());
+        setField("submit", new Button());
+        setField("unitDescription", new Label());
+        setField("historyListView", new ListView<String>());
+
+        setField("bundle",
+                ResourceBundle.getBundle("MessagesBundle", Locale.US));
+        setField("currentLanguage", "en");
+
+        controller.setDao(dao);
+    }
+
+    private List<UnitTranslation> translations() {
+        return List.of(
+                new UnitTranslation(1, "en", "Celsius", "Celsius temperature"),
+                new UnitTranslation(2, "en", "Fahrenheit", "Fahrenheit temperature"),
+                new UnitTranslation(3, "en", "Kelvin", "Kelvin temperature")
         );
     }
 }
