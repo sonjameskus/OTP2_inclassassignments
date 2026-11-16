@@ -1,4 +1,3 @@
-
 import javafx.application.Platform;
 import javafx.scene.control.*;
 import org.junit.jupiter.api.BeforeAll;
