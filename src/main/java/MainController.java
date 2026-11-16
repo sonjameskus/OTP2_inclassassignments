@@ -1,7 +1,12 @@
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.sql.Timestamp;
 
 public class MainController {
 
@@ -13,11 +18,18 @@ public class MainController {
     @FXML private Label name;
     @FXML private Label db_text;
     @FXML private Button submit;
+    @FXML private Label unitDescription;
+    @FXML private ListView<String> historyListView;
 
     private TemperatureConverter converter = new TemperatureConverter();
     private TempRecordDAO dao = new TempRecordDAO();
+    private UnitDAO uDao = new UnitDAO();
 
+    private Map<String, String> displayToUnit = new HashMap<>();
+    private Map<String, String> unitToDisplay = new HashMap<>();
+    private Map<String, String> unitDesc = new HashMap<>();
     private ResourceBundle bundle;
+    private String currentLanguage = "en";
 
     @FXML
     public void initialize() {
@@ -29,17 +41,6 @@ public class MainController {
                 "日本語",
                 "عربي"
         );
-
-        unitComboBox.getItems().addAll(
-                "Celsius", "Fahrenheit", "Kelvin"
-        );
-
-        toUnitComboBox.getItems().addAll(
-                "Celsius", "Fahrenheit", "Kelvin"
-        );
-
-        unitComboBox.setValue("Celsius");
-        toUnitComboBox.setValue("Fahrenheit");
 
         languageComboBox.setValue("English");
 
@@ -71,16 +72,31 @@ public class MainController {
                     break;
             }
         });
+
+        unitComboBox.setOnAction(event -> {
+            String selected = unitComboBox.getValue();
+
+            if (selected != null) {
+                String unitKey = displayToUnit.get(selected);
+                unitDescription.setText(unitDesc.get(unitKey));
+            }
+        });
     }
 
     private void loadLanguage(String language, String country) {
+        currentLanguage = language;
 
         String from = "Celsius";
         String to = "Fahrenheit";
 
-        if (bundle != null) {
-            from = getUnitValue(unitComboBox.getValue());
-            to = getUnitValue(toUnitComboBox.getValue());
+        if (!displayToUnit.isEmpty()) {
+            if (unitComboBox.getValue() != null) {
+                from = getUnitValue(unitComboBox.getValue());
+            }
+
+            if (toUnitComboBox.getValue() != null) {
+                to = getUnitValue(toUnitComboBox.getValue());
+            }
         }
 
         Locale locale = new Locale(language, country);
@@ -102,50 +118,63 @@ public class MainController {
 
         db_text.setText("");
 
-        updateUnitNames(from, to);
+        updateUnitNames(language, from, to);
     }
 
-    private void updateUnitNames(String from, String to) {
+    private void updateUnitNames(String lang, String from, String to) {
+
+        List<UnitTranslation> translations =
+                UnitDAO.translate(lang);
+
+        displayToUnit.clear();
+        unitToDisplay.clear();
+        unitDesc.clear();
+
+        for (UnitTranslation t : translations) {
+
+            String unitKey = getUnitKeyById(t.getUnitId());
+
+            displayToUnit.put(t.getName(), unitKey);
+            unitToDisplay.put(unitKey, t.getName());
+            unitDesc.put(unitKey, t.getDesc());
+        }
 
         unitComboBox.getItems().setAll(
-                bundle.getString("celsius"),
-                bundle.getString("fahrenheit"),
-                bundle.getString("kelvin")
+                unitToDisplay.get("Celsius"),
+                unitToDisplay.get("Fahrenheit"),
+                unitToDisplay.get("Kelvin")
         );
 
         toUnitComboBox.getItems().setAll(
-                bundle.getString("celsius"),
-                bundle.getString("fahrenheit"),
-                bundle.getString("kelvin")
+                unitToDisplay.get("Celsius"),
+                unitToDisplay.get("Fahrenheit"),
+                unitToDisplay.get("Kelvin")
         );
 
-        unitComboBox.setValue(
-                bundle.getString(getUnitKey(from))
-        );
-
-        toUnitComboBox.setValue(
-                bundle.getString(getUnitKey(to))
-        );
+        unitComboBox.setValue(unitToDisplay.get(from));
+        toUnitComboBox.setValue(unitToDisplay.get(to));
 
         unitComboBox.setPromptText(bundle.getString("from"));
         toUnitComboBox.setPromptText(bundle.getString("to"));
+
+        unitDescription.setText(
+                unitDesc.get(unitComboBox.getValue() == null
+                        ? "Celsius"
+                        : displayToUnit.get(unitComboBox.getValue()))
+        );
     }
 
     private String getUnitValue(String translatedUnit) {
 
-        if (translatedUnit.equals(bundle.getString("celsius"))) {
-            return "Celsius";
+        String unit = displayToUnit.get(translatedUnit);
+
+        if (unit == null) {
+            throw new IllegalArgumentException(
+                    "Unknown temperature unit"
+            );
         }
 
-        if (translatedUnit.equals(bundle.getString("fahrenheit"))) {
-            return "Fahrenheit";
-        }
-
-        if (translatedUnit.equals(bundle.getString("kelvin"))) {
-            return "Kelvin";
-        }
-
-        throw new IllegalArgumentException("Unknown temperature unit");
+        return unit;
     }
 
     private String getUnitKey(String unit) {
@@ -162,6 +191,25 @@ public class MainController {
 
             default:
                 throw new IllegalArgumentException("Unknown unit");
+        }
+    }
+
+    private String getUnitKeyById(int id) {
+
+        switch (id) {
+            case 1:
+                return "Celsius";
+
+            case 2:
+                return "Fahrenheit";
+
+            case 3:
+                return "Kelvin";
+
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown unit ID: " + id
+                );
         }
     }
 
@@ -208,7 +256,7 @@ public class MainController {
 
             double result = convert(input, from, to);
 
-            String resultUnit = bundle.getString(getUnitKey(to));
+            String resultUnit = unitToDisplay.get(to);
 
             conversionResult.setText(
                     bundle.getString("result") + " " +
@@ -216,15 +264,20 @@ public class MainController {
                             " " + resultUnit
             );
 
+            Timestamp createdAt = new Timestamp(System.currentTimeMillis());
+
             TempRecord record = new TempRecord(
                     input,
                     result,
                     getUnitId(from),
-                    getUnitId(to)
+                    getUnitId(to),
+                    currentLanguage,
+                    createdAt
             );
 
             if (dao.save(record)) {
                 db_text.setText(bundle.getString("db_saved"));
+                updateHistory();
             } else {
                 db_text.setText(bundle.getString("db_error"));
             }
@@ -282,6 +335,27 @@ public class MainController {
 
             default:
                 throw new IllegalArgumentException("Unknown unit");
+        }
+    }
+
+    private void updateHistory() {
+        historyListView.getItems().clear();
+
+        List<TempRecord> records = dao.getLastFive();
+
+        for (TempRecord record : records) {
+            String from = getUnitKeyById(record.getFromUnitId());
+            String to = getUnitKeyById(record.getToUnitId());
+
+            String fromName = unitToDisplay.get(from);
+            String toName = unitToDisplay.get(to);
+
+            String historyText =
+                    record.getInputValue() + " " + fromName +
+                            " → " +
+                            record.getResultValue() + " " + toName;
+
+            historyListView.getItems().add(historyText);
         }
     }
 }

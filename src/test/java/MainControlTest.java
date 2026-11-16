@@ -1,6 +1,8 @@
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,9 +28,12 @@ class MainControllerTest {
 
         method.setAccessible(true);
 
-        return method.invoke(controller, arguments);
+        try {
+            return method.invoke(controller, arguments);
+        } catch (InvocationTargetException e) {
+            throw (Exception) e.getCause();
+        }
     }
-
 
     @Test
     void testCelsiusToFahrenheit() throws Exception {
@@ -82,24 +87,28 @@ class MainControllerTest {
                 25.0, "Celsius", "Celsius"
         );
 
-        assertEquals(25.0, result);
+        assertEquals(25.0, result, 0.01);
     }
 
     @Test
     void testTemperatureBelowAbsoluteZero() {
-        assertThrows(Exception.class, () ->
-                callPrivateMethod(
+        Exception exception = assertThrows(
+                Exception.class,
+                () -> callPrivateMethod(
                         "convert",
                         new Class[]{double.class, String.class, String.class},
                         -300.0, "Celsius", "Kelvin"
                 )
         );
+
+        assertTrue(exception.getMessage().contains("absolute zero"));
     }
 
     @Test
     void testUnknownFromUnit() {
-        assertThrows(Exception.class, () ->
-                callPrivateMethod(
+        assertThrows(
+                Exception.class,
+                () -> callPrivateMethod(
                         "convert",
                         new Class[]{double.class, String.class, String.class},
                         20.0, "Unknown", "Celsius"
@@ -109,15 +118,15 @@ class MainControllerTest {
 
     @Test
     void testUnknownToUnit() {
-        assertThrows(Exception.class, () ->
-                callPrivateMethod(
+        assertThrows(
+                Exception.class,
+                () -> callPrivateMethod(
                         "convert",
                         new Class[]{double.class, String.class, String.class},
                         20.0, "Celsius", "Unknown"
                 )
         );
     }
-
 
     @Test
     void testGetUnitKey() throws Exception {
@@ -136,16 +145,15 @@ class MainControllerTest {
 
     @Test
     void testGetUnitKeyInvalid() {
-        assertThrows(Exception.class, () ->
-                callPrivateMethod(
+        assertThrows(
+                Exception.class,
+                () -> callPrivateMethod(
                         "getUnitKey",
                         new Class[]{String.class},
                         "Unknown"
                 )
         );
     }
-
-
 
     @Test
     void testGetUnitId() throws Exception {
@@ -164,11 +172,39 @@ class MainControllerTest {
 
     @Test
     void testGetUnitIdInvalid() {
-        assertThrows(Exception.class, () ->
-                callPrivateMethod(
+        assertThrows(
+                Exception.class,
+                () -> callPrivateMethod(
                         "getUnitId",
                         new Class[]{String.class},
                         "Unknown"
+                )
+        );
+    }
+
+    @Test
+    void testGetUnitKeyById() throws Exception {
+        assertEquals("Celsius",
+                callPrivateMethod("getUnitKeyById",
+                        new Class[]{int.class}, 1));
+
+        assertEquals("Fahrenheit",
+                callPrivateMethod("getUnitKeyById",
+                        new Class[]{int.class}, 2));
+
+        assertEquals("Kelvin",
+                callPrivateMethod("getUnitKeyById",
+                        new Class[]{int.class}, 3));
+    }
+
+    @Test
+    void testGetUnitKeyByIdInvalid() {
+        assertThrows(
+                Exception.class,
+                () -> callPrivateMethod(
+                        "getUnitKeyById",
+                        new Class[]{int.class},
+                        99
                 )
         );
     }

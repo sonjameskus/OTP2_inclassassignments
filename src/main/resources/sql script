@@ -1,0 +1,54 @@
+CREATE DATABASE temperature_db;
+
+CREATE TABLE temperature_units (
+   unit_id INT AUTO_INCREMENT NOT NULL,
+   name VARCHAR (80) NOT NULL,
+   symbol VARCHAR (10) NOT NULL,
+   PRIMARY KEY(unit_id)
+);
+
+CREATE TABLE temp_records (
+   record_id INT AUTO_INCREMENT NOT NULL,
+   input_value DOUBLE NOT NULL,
+   result_value DOUBLE NOT NULL,
+   from_unit_id INT NOT NULL,
+   to_unit_id INT NOT NULL,
+   created_at DATETIME NOT NULL,
+   language VARCHAR(5) NOT NULL DEFAULT 'en',
+   PRIMARY KEY(record_id)
+);
+
+ALTER TABLE temp_records ADD CONSTRAINT from_unit_id FOREIGN KEY (from_unit_id) REFERENCES temperature_units(unit_id);
+ALTER TABLE temp_records ADD CONSTRAINT to_unit_id FOREIGN KEY (to_unit_id) REFERENCES temperature_units(unit_id);
+
+CREATE TABLE temperature_unit_translations (
+    translation_id INT AUTO_INCREMENT PRIMARY KEY,
+    unit_id INT NOT NULL,
+    lang VARCHAR(5) NOT NULL,
+    name VARCHAR(80) NOT NULL,
+    description VARCHAR(255),
+
+    FOREIGN KEY (unit_id)
+        REFERENCES temperature_units(unit_id),
+
+    UNIQUE (unit_id, lang)
+);
+
+INSERT INTO temperature_unit_translations
+(unit_id, lang, name, description)
+VALUES
+(1, 'en', 'Celsius', 'Degrees Celsius'),
+(2, 'en', 'Fahrenheit', 'Degrees Fahrenheit'),
+(3, 'en', 'Kelvin', 'Kelvin'),
+(1, 'fi', 'Celsius', 'Celsius-asteet'),
+(2, 'fi', 'Fahrenheit', 'Fahrenheit-asteet'),
+(3, 'fi', 'Kelvin', 'Kelvin-asteikko'),
+(1, 'sv', 'Celsius', 'Grader Celsius'),
+(2, 'sv', 'Fahrenheit', 'Grader Fahrenheit'),
+(3, 'sv', 'Kelvin', 'Kelvinskalan'),
+(1, 'ja', '摂氏', 'セルシウス温度目盛り'),
+(2, 'ja', '華氏', '華氏温度'),
+(3, 'ja', 'ケルビン', '熱力学温度の単位'),
+(1, 'ar', 'سلسيوس', 'مقياس درجة حرارة سلسيوس'),
+(2, 'ar', 'فهرنهايت', 'مقياس درجة حرارة فهرنهايت'),
+(3, 'ar', 'كلفن', 'وحدة قياس درجة الحرارة المطلقة');
