@@ -25,6 +25,10 @@ public class MainController {
     private TempRecordDAO dao = new TempRecordDAO();
     private UnitDAO uDao = new UnitDAO();
 
+    void setDao(TempRecordDAO dao) {
+        this.dao = dao;
+    }
+
     private Map<String, String> displayToUnit = new HashMap<>();
     private Map<String, String> unitToDisplay = new HashMap<>();
     private Map<String, String> unitDesc = new HashMap<>();
