@@ -367,6 +367,162 @@ class MainControllerTest {
     }
 
     @Test
+    void testLanguageSelectionFinnish() throws Exception {
+        runOnFxThread(() -> {
+            prepareController(mock(TempRecordDAO.class));
+
+            try (MockedStatic<UnitDAO> mocked = mockStatic(UnitDAO.class)) {
+                mocked.when(() -> UnitDAO.translate(anyString()))
+                        .thenReturn(List.of(
+                                new UnitTranslation(1, "fi", "Celsius", "Celsius"),
+                                new UnitTranslation(2, "fi", "Fahrenheit", "Fahrenheit"),
+                                new UnitTranslation(3, "fi", "Kelvin", "Kelvin")
+                        ));
+
+                callPrivateMethod("initialize", new Class[]{});
+
+                ComboBox<String> language =
+                        (ComboBox<String>) getField("languageComboBox");
+
+                language.setValue("suomeksi");
+                language.getOnAction().handle(
+                        new javafx.event.ActionEvent()
+                );
+
+                assertEquals("fi", getField("currentLanguage"));
+                mocked.verify(() -> UnitDAO.translate("fi"));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    void testLanguageSelectionSwedish() throws Exception {
+        runOnFxThread(() -> {
+            prepareController(mock(TempRecordDAO.class));
+
+            try (MockedStatic<UnitDAO> mocked = mockStatic(UnitDAO.class)) {
+                mocked.when(() -> UnitDAO.translate(anyString()))
+                        .thenReturn(List.of(
+                                new UnitTranslation(1, "sv", "Celsius", "Celsius"),
+                                new UnitTranslation(2, "sv", "Fahrenheit", "Fahrenheit"),
+                                new UnitTranslation(3, "sv", "Kelvin", "Kelvin")
+                        ));
+
+                callPrivateMethod("initialize", new Class[]{});
+
+                ComboBox<String> language =
+                        (ComboBox<String>) getField("languageComboBox");
+
+                language.setValue("svenska");
+                language.getOnAction().handle(
+                        new javafx.event.ActionEvent()
+                );
+
+                assertEquals("sv", getField("currentLanguage"));
+                mocked.verify(() -> UnitDAO.translate("sv"));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    void testLanguageSelectionJapanese() throws Exception {
+        runOnFxThread(() -> {
+            prepareController(mock(TempRecordDAO.class));
+
+            try (MockedStatic<UnitDAO> mocked = mockStatic(UnitDAO.class)) {
+                mocked.when(() -> UnitDAO.translate(anyString()))
+                        .thenReturn(List.of(
+                                new UnitTranslation(1, "ja", "Celsius", "Celsius"),
+                                new UnitTranslation(2, "ja", "Fahrenheit", "Fahrenheit"),
+                                new UnitTranslation(3, "ja", "Kelvin", "Kelvin")
+                        ));
+
+                callPrivateMethod("initialize", new Class[]{});
+
+                ComboBox<String> language =
+                        (ComboBox<String>) getField("languageComboBox");
+
+                language.setValue("日本語");
+                language.getOnAction().handle(
+                        new javafx.event.ActionEvent()
+                );
+
+                assertEquals("ja", getField("currentLanguage"));
+                mocked.verify(() -> UnitDAO.translate("ja"));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    void testLanguageSelectionArabic() throws Exception {
+        runOnFxThread(() -> {
+            prepareController(mock(TempRecordDAO.class));
+
+            try (MockedStatic<UnitDAO> mocked = mockStatic(UnitDAO.class)) {
+                mocked.when(() -> UnitDAO.translate(anyString()))
+                        .thenReturn(List.of(
+                                new UnitTranslation(1, "ar", "Celsius", "Celsius"),
+                                new UnitTranslation(2, "ar", "Fahrenheit", "Fahrenheit"),
+                                new UnitTranslation(3, "ar", "Kelvin", "Kelvin")
+                        ));
+
+                callPrivateMethod("initialize", new Class[]{});
+
+                ComboBox<String> language =
+                        (ComboBox<String>) getField("languageComboBox");
+
+                language.setValue("عربي");
+                language.getOnAction().handle(
+                        new javafx.event.ActionEvent()
+                );
+
+                assertEquals("ar", getField("currentLanguage"));
+                mocked.verify(() -> UnitDAO.translate("ar"));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    void testUnitSelectionUpdatesDescription() throws Exception {
+        runOnFxThread(() -> {
+            prepareController(mock(TempRecordDAO.class));
+
+            Map<String, String> display = new HashMap<>();
+            display.put("Celsius", "Celsius");
+            display.put("Fahrenheit", "Fahrenheit");
+            display.put("Kelvin", "Kelvin");
+
+            Map<String, String> descriptions = new HashMap<>();
+            descriptions.put("Celsius", "Celsius description");
+            descriptions.put("Fahrenheit", "Fahrenheit description");
+            descriptions.put("Kelvin", "Kelvin description");
+
+            setField("displayToUnit", display);
+            setField("unitDesc", descriptions);
+
+            callPrivateMethod("initialize", new Class[]{});
+
+            ComboBox<String> units =
+                    (ComboBox<String>) getField("unitComboBox");
+
+            Label description = (Label) getField("unitDescription");
+
+            units.setValue("Fahrenheit");
+            units.getOnAction().handle(
+                    new javafx.event.ActionEvent()
+            );
+
+            assertEquals("Degrees Fahrenheit", description.getText());
+
+            return null;
+        });
+    }
+
+    @Test
     void testHandleConvertSuccessfulConversion() throws Exception {
         runOnFxThread(() -> {
             TempRecordDAO dao = mock(TempRecordDAO.class);
