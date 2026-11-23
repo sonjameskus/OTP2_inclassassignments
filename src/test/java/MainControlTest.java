@@ -18,6 +18,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -486,41 +487,39 @@ class MainControllerTest {
         });
     }
 
+
     @Test
     void testUnitSelectionUpdatesDescription() throws Exception {
         runOnFxThread(() -> {
             prepareController(mock(TempRecordDAO.class));
 
-            Map<String, String> display = new HashMap<>();
-            display.put("Celsius", "Celsius");
-            display.put("Fahrenheit", "Fahrenheit");
-            display.put("Kelvin", "Kelvin");
+            try (MockedStatic<UnitDAO> mocked = Mockito.mockStatic(UnitDAO.class)) {
 
-            Map<String, String> descriptions = new HashMap<>();
-            descriptions.put("Celsius", "Celsius description");
-            descriptions.put("Fahrenheit", "Fahrenheit description");
-            descriptions.put("Kelvin", "Kelvin description");
+                mocked.when(() -> UnitDAO.translate(Mockito.anyString()))
+                        .thenReturn(translations());
 
-            setField("displayToUnit", display);
-            setField("unitDesc", descriptions);
+                callPrivateMethod("initialize", new Class<?>[0]);
 
-            callPrivateMethod("initialize", new Class[]{});
+                ComboBox<String> unitComboBox =
+                        (ComboBox<String>) getField("unitComboBox");
 
-            ComboBox<String> units =
-                    (ComboBox<String>) getField("unitComboBox");
+                Label unitDescription =
+                        (Label) getField("unitDescription");
 
-            Label description = (Label) getField("unitDescription");
+                unitComboBox.setValue("Fahrenheit");
+                unitComboBox.getOnAction().handle(
+                        new javafx.event.ActionEvent()
+                );
 
-            units.setValue("Fahrenheit");
-            units.getOnAction().handle(
-                    new javafx.event.ActionEvent()
-            );
+                assertEquals("Fahrenheit temperature", unitDescription.getText());
 
-            assertEquals("Degrees Fahrenheit", description.getText());
+                mocked.verify(() -> UnitDAO.translate("en"));
+            }
 
             return null;
         });
     }
+
 
     @Test
     void testHandleConvertSuccessfulConversion() throws Exception {
