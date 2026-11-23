@@ -15,15 +15,22 @@ pipeline {
     }
 
     stages {
+
         stage('Check') {
             steps {
                 git 'https://github.com/sonjameskus/OTP2_inclassassignments.git'
             }
         }
 
-        stage('Build and Test') {
+        stage('Build') {
             steps {
-                bat 'mvn clean verify'
+                bat 'mvn clean install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat 'mvn test'
             }
         }
 
@@ -44,9 +51,9 @@ pipeline {
                             -Dsonar.projectKey=otpinclass ^
                             -Dsonar.projectName=Otpinclass ^
                             -Dsonar.sources=src/main/java ^
-                            -Dsonar.java.binaries=target/classes ^
-                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml ^
-                            -Dsonar.token=%SONAR_TOKEN%
+                            -Dsonar.host.url=http://localhost:9000 ^
+                            -Dsonar.token=%SONAR_TOKEN% ^
+                            -Dsonar.java.binaries=target/classes
                         """
                     }
                 }
