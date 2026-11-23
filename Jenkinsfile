@@ -40,9 +40,9 @@ pipeline {
                     withSonarQubeEnv("${env.SONARQUBE_SERVER}") {
                         bat """
                             sonar-scanner ^
-                            -Dsonar.projectKey=BMI_Cal ^
-                            -Dsonar.sources=src ^
-                            -Dsonar.projectName=BMI_Cal ^
+                            -Dsonar.projectKey=otpinclass ^
+                            -Dsonar.sources=src/main/java ^
+                            -Dsonar.projectName=Otpinclass ^
                             -Dsonar.host.url=http://localhost:9000 ^
                             -Dsonar.token=%SONAR_TOKEN% ^
                             -Dsonar.java.binaries=target/classes
