@@ -5,8 +5,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class UnitDAO {
+
+    private static final Logger msg = Logger.getLogger(UnitDAO.class.getName());
 
     public static List<UnitTranslation> translate(String lang) {
 
@@ -35,7 +38,7 @@ public class UnitDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            msg.info("Error");
         }
 
         return translations;

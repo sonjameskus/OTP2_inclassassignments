@@ -1,8 +1,11 @@
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class TempRecordDAO {
+
+    private static final Logger msg = Logger.getLogger(TempRecordDAO.class.getName());
 
     public boolean save(TempRecord record) {
 
@@ -27,7 +30,7 @@ public class TempRecordDAO {
             return true;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            msg.info("Error");
 
             return false;
         }
@@ -59,7 +62,7 @@ public class TempRecordDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            msg.info("Error");
         }
 
         return records;

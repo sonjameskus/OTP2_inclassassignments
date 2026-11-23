@@ -1,6 +1,9 @@
 import java.sql.*;
+import java.util.logging.Logger;
 
 public class MariaDBConnection {
+
+    private static final Logger msg = Logger.getLogger(MariaDBConnection.class.getName());
 
     public static Connection connect() {
         try {
@@ -10,8 +13,7 @@ public class MariaDBConnection {
                     "password"
             );
         } catch (SQLException e) {
-            System.out.println("Connection failed.");
-            e.printStackTrace();
+            msg.info("Connection failed.");
             return null;
         }
     }
